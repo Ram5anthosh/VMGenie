@@ -9,6 +9,10 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 
 @Path("web")
 public class EchoWebform {
@@ -19,11 +23,15 @@ public class EchoWebform {
             @DefaultValue("") @QueryParam("nameOfVM") String nameOfVM,
             @DefaultValue("") @QueryParam("ramRequired") String ramRequired,
             @DefaultValue("") @QueryParam("diskSizeRequired") String diskSizeRequired,
-            @DefaultValue("") @QueryParam("vcpusRequired") String vcpusRequired) {
+            @DefaultValue("") @QueryParam("vcpusRequired") String vcpusRequired,
+            @DefaultValue("") @QueryParam("isoURL") String isoURL) {
 
-        if (locationOne.isEmpty() || locationTwo.isEmpty()) {
+        if (nameOfVM.isEmpty() || ramRequired.isEmpty() || diskSizeRequired.isEmpty() || vcpusRequired.isEmpty()) {
             // Initial case when no input parameters are passed. Show web form.
-            return "<html><head><title>TravelBuddy</title><style>" +
+            String freeOutput = executeCommand("free -h");
+            String dfOutput = executeCommand("df -h");
+ 
+            return "<html><head><title>VM-Create</title><style>" +
                     "body { font-family: Arial, sans-serif; text-align: center; }" +
                     "form { margin: 0 auto; width: 50%; padding: 20px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9; }" +
                     "input[type=\"text\"], input[type=\"submit\"] { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }" +
@@ -36,12 +44,21 @@ public class EchoWebform {
                     "<input type=\"text\" id=\"nameOfVM\" name=\"nameOfVM\"><br>" +
                     "<strong><label for=\"ramRequired\">Enter the RAM required:</label></strong><br>" +
                     "<input type=\"text\" id=\"ramRequired\" name=\"ramRequired\"><br>" +
+                    "<span style=\"color: red;\">Note: Enter values in MB.</span><br><br>" +
                     "<strong><label for=\"diskSizeRequired\">Enter the required Disk size :</label></strong><br>" +
                     "<input type=\"text\" id=\"diskSizeRequired\" name=\"diskSizeRequired\"><br><br>" +
+                    "<span style=\"color: red;\">Use M/G/T - for MegaByte, GigaByte and TetraByte Respectively.</span><br><br>" +
                     "<strong><label for=\"vcpusRequired\">Enter the number of CPU cores required:</label></strong><br>" +
-                    "<input type=\"text\" id=\"vcpusRequired\" name=\"vcpusRequired\"><br><br>" +
-                    "<input type=\"submit\" value=\"Submit\">" +
+                    "<input type=\"text\" id=\"vcpusRequired\" name=\"vcpusRequired\"><br>" +
+                    "<span style=\"color: red;\">Note: Please enter an integer value.</span><br><br>" +
+                    "<strong><label for=\"isoURL\">Enter the ISO URL:</label></strong><br>" +
+                    "<input type=\"text\" id=\"isoURL\" name=\"isoURL\"><br><br>" +
+                    "<span style=\"color: red;\">Note: Make sure that space requirements for VM must be less than avialable space.</span><br><br>" +
+                    "<input type=\"submit\" value=\"Submit\"><br><br><br>" +
+                    "<p>RAM available on server:<br>" + freeOutput + "</p>" +
+                    "<p>Disk Information:<br>" + dfOutput + "</p>" +
                     "</form></body></html>";
+
 
         } else {
             // Case when input params are passed. Call REST service.
@@ -52,6 +69,7 @@ public class EchoWebform {
                     .queryParam("ramRequired", ramRequired)
                     .queryParam("diskSizeRequired", diskSizeRequired)
                     .queryParam("vcpusRequired", vcpusRequired)
+                    .queryParam("isoURL", isoURL)
                     .request().get(EchoMessage.class);
 
             return "<html><body><h4>Cloud and Edge Computing Assignment:</h4>" +
@@ -59,4 +77,46 @@ public class EchoWebform {
                     "</body></html>";
         }
     }
+    private String executeCommand(String command) {
+    StringBuilder output = new StringBuilder();
+    Process process;
+    try {
+        process = Runtime.getRuntime().exec(command);
+        process.waitFor();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+        output.append("<style>");
+        output.append("table { border-collapse: collapse; width: 50%; margin: 0 auto; }");
+        output.append("th, td { border: 1px solid #dddddd; text-align: left; padding: 8px; }");
+        output.append("th { background-color: #f2f2f2; }");
+        output.append("</style>");
+
+        output.append("<table>");
+        String line;
+        boolean isHeader = true;
+        while ((line = reader.readLine()) != null) {
+            output.append("<tr>");
+            String[] columns = line.split("\\s+");
+            for (String column : columns) {
+                if (isHeader) {
+                    output.append("<th>").append(column).append("</th>");
+                } else {
+                    output.append("<td>").append(column).append("</td>");
+                }
+            }
+            isHeader = false;
+            output.append("</tr>");
+        }
+        output.append("</table>");
+
+    } catch (IOException | InterruptedException e) {
+        e.printStackTrace();
+    }
+    return output.toString();
+}
+
+
+
+
+
 }
