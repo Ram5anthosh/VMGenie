@@ -23,8 +23,7 @@ public class EchoWebform {
             @DefaultValue("") @QueryParam("nameOfVM") String nameOfVM,
             @DefaultValue("") @QueryParam("ramRequired") String ramRequired,
             @DefaultValue("") @QueryParam("diskSizeRequired") String diskSizeRequired,
-            @DefaultValue("") @QueryParam("vcpusRequired") String vcpusRequired,
-            @DefaultValue("") @QueryParam("isoURL") String isoURL) {
+            @DefaultValue("") @QueryParam("vcpusRequired") String vcpusRequired) {
 
         if (nameOfVM.isEmpty() || ramRequired.isEmpty() || diskSizeRequired.isEmpty() || vcpusRequired.isEmpty()) {
             // Initial case when no input parameters are passed. Show web form.
@@ -47,14 +46,12 @@ public class EchoWebform {
                     "<span style=\"color: red;\">Note: Enter values in MB.</span><br><br>" +
                     "<strong><label for=\"diskSizeRequired\">Enter the required Disk size :</label></strong><br>" +
                     "<input type=\"text\" id=\"diskSizeRequired\" name=\"diskSizeRequired\"><br><br>" +
-                    "<span style=\"color: red;\">Use M/G/T - for MegaByte, GigaByte and TetraByte Respectively.</span><br><br>" +
+                    "<span style=\"color: red;\">Use integer to denote the number of GB required storage.</span><br><br>" +
                     "<strong><label for=\"vcpusRequired\">Enter the number of CPU cores required:</label></strong><br>" +
                     "<input type=\"text\" id=\"vcpusRequired\" name=\"vcpusRequired\"><br>" +
                     "<span style=\"color: red;\">Note: Please enter an integer value.</span><br><br>" +
-                    "<strong><label for=\"isoURL\">Enter the ISO URL:</label></strong><br>" +
-                    "<input type=\"text\" id=\"isoURL\" name=\"isoURL\"><br><br>" +
-                    "<span style=\"color: red;\">Note: Make sure that space requirements for VM must be less than avialable space.</span><br><br>" +
                     "<input type=\"submit\" value=\"Submit\"><br><br><br>" +
+                    "<h3> Centos 7.0 VM will be created. </h3>" +
                     "<p>RAM available on server:<br>" + freeOutput + "</p>" +
                     "<p>Disk Information:<br>" + dfOutput + "</p>" +
                     "</form></body></html>";
@@ -69,7 +66,6 @@ public class EchoWebform {
                     .queryParam("ramRequired", ramRequired)
                     .queryParam("diskSizeRequired", diskSizeRequired)
                     .queryParam("vcpusRequired", vcpusRequired)
-                    .queryParam("isoURL", isoURL)
                     .request().get(EchoMessage.class);
 
             return "<html><body><h4>Cloud and Edge Computing Assignment:</h4>" +

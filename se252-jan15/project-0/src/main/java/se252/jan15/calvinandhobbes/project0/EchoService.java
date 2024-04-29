@@ -25,8 +25,7 @@ public EchoMessage getWeatherAndTimeZone(
 @DefaultValue("") @QueryParam("nameOfVM") String nameOfVM,
 @DefaultValue("") @QueryParam("ramRequired") String ramRequired,
 @DefaultValue("") @QueryParam("diskSizeRequired") String diskSizeRequired,
-@DefaultValue("") @QueryParam("vcpusRequired") String vcpusRequired,
-@DefaultValue("") @QueryParam("isoURL") String isoURL) {
+@DefaultValue("") @QueryParam("vcpusRequired") String vcpusRequired) {
 
 // Check if parameters are provided
 if (nameOfVM.isEmpty()) {
@@ -41,26 +40,24 @@ return new EchoMessage("{\"error\": \"Storage of the virtual machine is required
 if (vcpusRequired.isEmpty()) {
 return new EchoMessage("{\"error\": \"Number of CPU cores of the virtual machine is required.\"}");
 }
-if (isoURL.isEmpty()) {
-return new EchoMessage("{\"error\": \"URL for the ISO file is required.\"}");
-}
 
 // Execute shell command to create virtual machine
-String[] urlParts = isoURL.split("/");
-String isoFileName = urlParts[urlParts.length - 1];
+String isoFileName = CentOS-7-x86_64-Minimal-2009.iso;
 String diskFileName = nameOfVM + ".qcow2";
 String[] command = {
+"sudo",
 "bash",
 "-c",
-"cd /var/lib/libvirt/boot/ && wget " + isoURL + " && virt-install --virt-type=kvm --name " + nameOfVM +
-" --ram " + ramRequired + " --vcpus=" + vcpusRequired + " --cdrom=/var/lib/libvirt/boot/" + isoFileName +
-" --network=bridge=br0,model=virtio --graphics vnc --disk path=/var/lib/libvirt/images/" + diskFileName + ",size=40,bus=virtio,format=qcow2"
+"wget https://centos.excellmedia.net/7.9.2009/isos/x86_64/CentOS-7-x86_64-Minimal-2009.iso -P /var/lib/libvirt/boot/" + " && sudo virt-install --virt-type=kvm --name " + nameOfVM +
+" --ram " + ramRequired + " --os-type=Linux --os-variant=centoxs7.0 --vcpus=" + vcpusRequired + " --cdrom=/var/lib/libvirt/boot/" + isoFileName +
+" --network=bridge=br0,model=virtio --console pty,target_type=serial --disk path=/var/lib/libvirt/images/" + diskFileName + ",size="+ diskSizeRequired + ",bus=virtio,format=qcow2"
 };
 String output = executeCommand(command);
 
 
 // Execute shell command to get VNC details
 String[] vncCommand = {
+"sudo",
 "bash",
 "-c",
 "virsh dumpxml " + nameOfVM + " | grep vnc"
